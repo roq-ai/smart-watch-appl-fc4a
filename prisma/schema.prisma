@@ -1,0 +1,79 @@
+generator client {
+  provider = "prisma-client-js"
+  previewFeatures = ["clientExtensions", "postgresqlExtensions"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  extensions      = [pgcrypto]
+}
+
+model bluetooth {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  connectivity Boolean
+  watch_id     String   @db.Uuid
+  created_at   DateTime @default(now()) @db.Timestamp(6)
+  updated_at   DateTime @default(now()) @db.Timestamp(6)
+  watch        watch    @relation(fields: [watch_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model customer {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  first_name String   @db.VarChar(255)
+  last_name  String   @db.VarChar(255)
+  email      String   @db.VarChar(255)
+  password   String   @db.VarChar(255)
+  watch_id   String   @db.Uuid
+  created_at DateTime @default(now()) @db.Timestamp(6)
+  updated_at DateTime @default(now()) @db.Timestamp(6)
+  watch      watch    @relation(fields: [watch_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model health_check {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  heart_rate Boolean
+  spo2       Boolean
+  watch_id   String   @db.Uuid
+  created_at DateTime @default(now()) @db.Timestamp(6)
+  updated_at DateTime @default(now()) @db.Timestamp(6)
+  watch      watch    @relation(fields: [watch_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model manufacturer {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  description String?  @db.VarChar(255)
+  name        String   @db.VarChar(255)
+  created_at  DateTime @default(now()) @db.Timestamp(6)
+  updated_at  DateTime @default(now()) @db.Timestamp(6)
+  user_id     String   @db.Uuid
+  tenant_id   String   @db.VarChar(255)
+  user        user     @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  watch       watch[]
+}
+
+model user {
+  id           String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email        String         @unique @db.VarChar(255)
+  firstName    String?        @db.VarChar(255)
+  lastName     String?        @db.VarChar(255)
+  roq_user_id  String         @db.VarChar(255)
+  tenant_id    String         @db.VarChar(255)
+  created_at   DateTime       @default(now()) @db.Timestamp(6)
+  updated_at   DateTime       @default(now()) @db.Timestamp(6)
+  manufacturer manufacturer[]
+}
+
+model watch {
+  id              String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  model           String         @db.VarChar(255)
+  dial            String         @db.VarChar(255)
+  time_setting    String         @db.VarChar(255)
+  manufacturer_id String         @db.Uuid
+  created_at      DateTime       @default(now()) @db.Timestamp(6)
+  updated_at      DateTime       @default(now()) @db.Timestamp(6)
+  bluetooth       bluetooth[]
+  customer        customer[]
+  health_check    health_check[]
+  manufacturer    manufacturer   @relation(fields: [manufacturer_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
